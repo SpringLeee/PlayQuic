@@ -3,3 +3,7 @@
 ################################################################################
 
 /.vs/PlayQuic
+/QuicClient/bin/Debug/net7.0
+/QuicClient/obj
+/QuicServer/bin/Debug/net7.0
+/QuicServer/obj
