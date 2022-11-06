@@ -1,15 +1,20 @@
 ﻿using System.Buffers;
 using System.IO;
+using System.IO.Pipelines;
+using System.IO.Pipes;
 using System.Net;
 using System.Net.Quic;
 using System.Net.Security;
+using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Xml.Linq;
 
-Console.WriteLine("QuicClient");
+Console.WriteLine("Quic Client Running...");
 
-await Task.Delay(5000);
+await Task.Delay(3000);
 
-await using var connection = await QuicConnection.ConnectAsync(new QuicClientConnectionOptions
+// 连接到服务端
+var connection = await QuicConnection.ConnectAsync(new QuicClientConnectionOptions
 {
     DefaultCloseErrorCode = 0,
     DefaultStreamErrorCode = 0,
@@ -24,30 +29,29 @@ await using var connection = await QuicConnection.ConnectAsync(new QuicClientCon
     }
 });
 
-await using QuicStream stream = await connection.OpenOutboundStreamAsync(QuicStreamType.Unidirectional);
- 
-for (int i = 0; i < 100; i++)
+for (int j = 0; j < 5; j++)
 {
-    await Task.Delay(1000);
-    Console.WriteLine(i.ToString());
-    await stream.WriteAsync(System.Text.UTF8Encoding.UTF8.GetBytes("hello quic: " + DateTime.Now.ToLongDateString()), completeWrites: true);
-}
- 
-Console.ReadKey();
+    _ = Task.Run(async () => {
+
+        // 打开一个出站的双向流
+        var stream = await connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional); 
+      
+        var writer = PipeWriter.Create(stream); 
+
+        Console.WriteLine();
+
+        // 写入数据
+        await Task.Delay(2000);
+
+        var message = $"Hello Quic [{stream.Id}] \n";
+
+        Console.Write("Send -> " + message);
+
+        await writer.WriteAsync(Encoding.UTF8.GetBytes(message));
+
+        await writer.CompleteAsync(); 
+    });  
+} 
 
 
-async Task<int> WriteForever(QuicStream stream, int size = 1)
-{
-    byte[] buffer = ArrayPool<byte>.Shared.Rent(size);
-    try
-    {
-        while (true)
-        {
-            await stream.WriteAsync(buffer);
-        }
-    }
-    finally
-    {
-        ArrayPool<byte>.Shared.Return(buffer);
-    }
-}
+Console.ReadKey();  

@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>")]
+[assembly: SuppressMessage("Usage", "CA2252:此 API 需要选择加入预览功能", Justification = "<挂起>")]
